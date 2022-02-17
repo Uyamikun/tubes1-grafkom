@@ -1,0 +1,19 @@
+body {
+    margin: 0;
+}
+canvas {
+    display: block;
+}
+
+.column {
+    float: left;
+    padding: 10px;
+    box-sizing: border-box;
+}
+  
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+    box-sizing: border-box;
+}

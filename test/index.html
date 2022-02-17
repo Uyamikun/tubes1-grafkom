@@ -1,6 +1,7 @@
 <html>
     <head>
         <title>Test</title>
+        <link rel="stylesheet" href="indexstyles.css">
         <script src="utils.js"></script>
         <script id="shader-vs" type="x-shader/x-vertex">
             attribute vec2 a_position;
@@ -15,90 +16,19 @@
                 gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
             }
         </script>
-        <script>
-            var canvas, gl, shaderProgram;
-            var points = [];
-            window.onload = function() {
-                canvas = initCanvas("canvas");console.log(canvas);
-				gl = initGL(canvas);console.log(gl);
-                shaderProgram = initProgram(gl);
- 
-                gl.clearColor(1.0, 1.0, 1.0, 1.0);
-                gl.clear(gl.COLOR_BUFFER_BIT);
- 
-                var positionLocation = gl.getAttribLocation(shaderProgram, "a_position");
-                canvas.onmousedown = function(e) {
-                    onCanvasMouseDown(e, positionLocation, canvas, gl);
-                }
-            }
- 
-            function onCanvasMouseDown(e, positionLocation, canvas, gl) {
-                var x = e.pageX;
-                var y = e.pageY;
-                x = (x - canvas.width / 2) / (canvas.width / 2);
-                y = (canvas.height / 2 - y) / (canvas.height / 2);
-
-                var new_point = true;
-
-                for (var ii = 0; ii < points.length; ii += 2) {
-                    if (Math.abs(points[ii]-x) <= 0.05 && Math.abs(points[ii+1]-y) <= 0.05) {
-                        new_point = false;
-                        if (points.length > 2) {
-                            if (ii % 4 == 0) {
-                                points.push(points[ii+2], points[ii+3]);
-                                points.splice(ii, 4);
-                            } else {
-                                points.push(points[ii-2], points[ii-1]);
-                                points.splice(ii-2, 4);
-                            }
-                        } else {
-                            points = []
-                        }
-                        break;
-                    }
-                }
-
-                if (new_point) {
-                    points.push(x, y);
-                }
-
-                render(positionLocation);
-            }
-
-            function render(positionLocation) {
-                var positionBuffer = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
-
-                gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-                gl.clear(gl.COLOR_BUFFER_BIT);
-
-                gl.enableVertexAttribArray(positionLocation);
-                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-                var size = 2;
-                var type = gl.FLOAT;
-                var normalize = false;
-                var stride = 0;
-                var offset = 0;
-                gl.vertexAttribPointer(
-                    positionLocation, size, type, normalize, stride, offset);
-
-                var n = Math.floor(points.length/2);
-                var p = 0;
-                if (n % 2 == 1) {
-                    n--;
-                    p = 1;
-                }
-
-                gl.drawArrays(gl.LINES, 0, n);
-                gl.drawArrays(gl.POINTS, 0, n+p);
-            }
-        </script>
+        <script type="text/javascript" src="script.js"></script>
     </head>
     <body>
-        <canvas id="canvas" width="800" height="800">
-            Canvas Not Supported! :(
-        </canvas>
+        <div id="ui">
+            <button id="drawLine">Garis</button>
+            <button id="drawSquare">Persegi</button>
+            <button id="drawRectangle">Persegi panjang</button>
+            <button id="drawPolygon">Poligon</button>
+        </div>
+        <div id="canvas_container" class="column">
+            <canvas id="canvas" width="800" height="800">
+                Canvas Not Supported! :(
+            </canvas>
+        </div>
     </body>
 </html>
