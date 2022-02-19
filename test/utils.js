@@ -1,5 +1,5 @@
 function initCanvas(canvasID) {
-    canvas = document.getElementById(canvasID);
+    var canvas = document.getElementById(canvasID);
  
     if(!canvas) {
         alert("Canvas is not available! :(");
@@ -17,7 +17,7 @@ function initGL(canvas) {
  
     for(var i = 0; i < names.length; ++i) {
         try {
-            gl = canvas.getContext(names[i], {preserveDrawingBuffer: true});console.log("i: " + i + "gl: " + gl);
+            gl = canvas.getContext(names[i], {preserveDrawingBuffer: true});
         } catch(e) {}
  
         if(gl) {
@@ -82,7 +82,189 @@ function initProgram(gl) {
         alert("Could not initialise shaders! :(");
     }
  
-    gl.useProgram(shaderProgram);
- 
 	return shaderProgram;
+}
+
+function createPointsShaderProgram(gl) {
+    const program = gl.createProgram();
+    if (!program) {
+        console.log("Error creating program");
+        return null;
+    }
+
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    if (!vertexShader || !fragmentShader) {
+        console.log("Error creating shader");
+        return null;
+    }
+    
+    var vertexShaderCode = `
+    attribute vec2 a_position;
+    void main() {
+        gl_PointSize = 5.0;
+        gl_Position = vec4(a_position, 0.0, 1.0);
+    }
+    `;
+    gl.shaderSource(vertexShader, vertexShaderCode);
+    gl.compileShader(vertexShader);
+    const vertexShaderCompiled = gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS);
+    if (!vertexShaderCompiled) {
+        const lastError = gl.getShaderInfoLog(vertexShader);
+        console.log(lastError);
+        return null;
+    }
+
+    const fragmentShaderCode = `
+    void main() {
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    }`;
+
+    gl.shaderSource(fragmentShader, fragmentShaderCode);
+    gl.compileShader(fragmentShader);
+    const fragmentShaderCompiled = gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS);
+    if (!fragmentShaderCompiled) {
+        const lastError = gl.getShaderInfoLog(fragmentShader);
+        console.log(lastError);
+        return null;
+    }
+
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+
+    //if not linked
+    const linked = gl.getProgramParameter(program, gl.LINK_STATUS);
+    if (!linked) {
+        const lastError = gl.getProgramInfoLog(program);
+        console.log(lastError);
+        gl.deleteProgram(program);
+        return null;
+    }
+    return program;
+}
+
+function createLinesShaderProgram(gl) {
+    const program = gl.createProgram();
+    if (!program) {
+        console.log("Error creating program");
+        return null;
+    }
+
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    if (!vertexShader || !fragmentShader) {
+        console.log("Error creating shader");
+        return null;
+    }
+    
+    var vertexShaderCode = `
+    attribute vec2 a_position;
+    void main() {
+        gl_Position = vec4(a_position, 0.0, 1.0);
+    }
+    `;
+    gl.shaderSource(vertexShader, vertexShaderCode);
+    gl.compileShader(vertexShader);
+    const vertexShaderCompiled = gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS);
+    if (!vertexShaderCompiled) {
+        const lastError = gl.getShaderInfoLog(vertexShader);
+        console.log(lastError);
+        return null;
+    }
+
+    const fragmentShaderCode = `
+    void main() {
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    }`;
+
+    gl.shaderSource(fragmentShader, fragmentShaderCode);
+    gl.compileShader(fragmentShader);
+    const fragmentShaderCompiled = gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS);
+    if (!fragmentShaderCompiled) {
+        const lastError = gl.getShaderInfoLog(fragmentShader);
+        console.log(lastError);
+        return null;
+    }
+
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+
+    //if not linked
+    const linked = gl.getProgramParameter(program, gl.LINK_STATUS);
+    if (!linked) {
+        const lastError = gl.getProgramInfoLog(program);
+        console.log(lastError);
+        gl.deleteProgram(program);
+        return null;
+    }
+    return program;
+}
+
+function createShapesShaderProgram(gl) {
+    const program = gl.createProgram();
+    if (!program) {
+        console.log("Error creating program");
+        return null;
+    }
+
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    if (!vertexShader || !fragmentShader) {
+        console.log("Error creating shader");
+        return null;
+    }
+    
+    var vertexShaderCode = `
+    attribute vec2 a_position;
+    attribute vec4 a_color;
+
+    varying vec4 v_color;
+
+    void main() {
+        gl_Position = vec4(a_position, 0, 1);
+
+        v_color = a_color;
+    }
+    `;
+    gl.shaderSource(vertexShader, vertexShaderCode);
+    gl.compileShader(vertexShader);
+    const vertexShaderCompiled = gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS);
+    if (!vertexShaderCompiled) {
+        const lastError = gl.getShaderInfoLog(vertexShader);
+        console.log(lastError);
+        return null;
+    }
+
+    const fragmentShaderCode = `
+    precision mediump float;
+    varying vec4 v_color;
+
+    void main() {
+        gl_FragColor = v_color;
+    }`;
+
+    gl.shaderSource(fragmentShader, fragmentShaderCode);
+    gl.compileShader(fragmentShader);
+    const fragmentShaderCompiled = gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS);
+    if (!fragmentShaderCompiled) {
+        const lastError = gl.getShaderInfoLog(fragmentShader);
+        console.log(lastError);
+        return null;
+    }
+
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+
+    //if not linked
+    const linked = gl.getProgramParameter(program, gl.LINK_STATUS);
+    if (!linked) {
+        const lastError = gl.getProgramInfoLog(program);
+        console.log(lastError);
+        gl.deleteProgram(program);
+        return null;
+    }
+    return program;
 }
