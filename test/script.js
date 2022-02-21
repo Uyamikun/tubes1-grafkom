@@ -18,8 +18,12 @@ window.onload = function() {
     canvas.onmousemove = function(e) {
         onCanvasMouseMove(e, canvas, gl);
     }
+    canvas.onmouseup = function(e) {
+        onCanvasMouseUp(e, canvas, gl);
+    }
 
     document.getElementById("drawLine").onclick = function () {pen = 0;}
+    document.getElementById("drawRectangle").onclick = function () {pen = 2;}
     document.getElementById("drawPolygon").onclick = function () {pen = 3;}
 }
 
@@ -46,6 +50,14 @@ function onCanvasMouseDown(e, canvas, gl) {
                 }
             }
         }
+    }
+
+    // if pen = draw rectangle
+    if (pen == 2){
+        isDrawing = true
+
+
+        drawCollection.push({type: 2, points: [x, y, x, y, x, y, x, y], color: [0.1, 0.1, 0.9, 1.0], isDrawing: true});
     }
 
     // if pen = draw poligon
@@ -113,6 +125,22 @@ function onCanvasMouseMove(e, canvas, gl) {
             }
         }
     }
+
+    //jika drawing menggunakan rectangle
+    if (pen == 2){
+
+        for (var i = 0; i < drawCollection.length; i++) {
+            // cari rectangle mana yang sedang digambar
+            if (drawCollection[i].type == 2 && drawCollection[i].isDrawing == true) {
+                //update lokasi titik sudut
+                drawCollection[i].points[3] = y;
+                drawCollection[i].points[4] = x;
+                drawCollection[i].points[5] = y;
+                drawCollection[i].points[6] = x;
+            }
+        }
+    }
+
     // jika drawing menggunakan pen poligon
     if (pen == 3) {
         if (isDrawing) {
@@ -124,6 +152,22 @@ function onCanvasMouseMove(e, canvas, gl) {
     }
     
     render();
+}
+
+function onCanvasMouseUp(e, canvas, gl){
+    if (!isDrawing && pen != 2) {
+        return;
+    }
+
+    for (var i = 0; i < drawCollection.length; i++) {
+        if (drawCollection[i].type == 2 && drawCollection[i].isDrawing == true) {
+            drawCollection[i].isDrawing = false;
+        }
+    }
+
+    isDrawing = false;
+
+    render()
 }
 
 // fungsi render
@@ -139,7 +183,7 @@ function render() {
             renderPoints(gl, drawCollection[i].points);
         }
         // if objek yang digambar adalah poligon
-        else if (drawCollection[i].type == 3) {
+        else if (drawCollection[i].type == 3 || drawCollection[i].type == 2) {
             // render poligon from points to triangles
             let success = renderPolygon(gl, drawCollection[i]);
             // jika sukses, gambar juga titik-titiknya
