@@ -24,6 +24,7 @@ window.onload = function() {
 
     document.getElementById("drawLine").onclick = function () {pen = 0;}
     document.getElementById("drawRectangle").onclick = function () {pen = 2;}
+    document.getElementById("drawSquare").onclick = function () {pen = 1;}
     document.getElementById("drawPolygon").onclick = function () {pen = 3;}
 }
 
@@ -60,6 +61,18 @@ function onCanvasMouseDown(e, canvas, gl) {
         drawCollection.push({type: 2, points: [x, y, x, y, x, y, x, y], color: [0.1, 0.1, 0.9, 1.0], isDrawing: true});
     }
 
+    if (pen == 1) {
+        var r1 = Math.random();
+        var b1 = Math.random();
+        var g1 = Math.random();
+        isDrawing = true;
+        drawCollection.push({
+            type: 1, 
+            points: [x, y, x, y, x, y,x, y], 
+            color: [r1, b1, g1, 1.0], 
+            isDrawing: true}
+        );
+    }
     // if pen = draw poligon
     if (pen == 3) {
         var new_point = true;
@@ -109,9 +122,13 @@ function onCanvasMouseMove(e, canvas, gl) {
         return;
     }
 
+    // POSISI TITIK X
     var x = e.pageX - gl.canvas.offsetLeft;
+    // POSISI TITIK Y 
     var y = e.pageY - gl.canvas.offsetTop;
+    // POSISI X dalam clip space
     x = (x - canvas.width / 2) / (canvas.width / 2);
+    // POSISI Y dalam clip space
     y = (canvas.height / 2 - y) / (canvas.height / 2);
 
     // jika drawing menggunakan pen garis
@@ -141,6 +158,66 @@ function onCanvasMouseMove(e, canvas, gl) {
         }
     }
 
+    //put point 
+    if (pen == 1){
+
+        for (var i = 0; i < drawCollection.length; i++) {
+            // cari rectangle mana yang sedang digambar
+            if (drawCollection[i].type == 1 && drawCollection[i].isDrawing == true) {
+                //0  1   2  3  4  5  6  7 8 9 10 11
+                //x  y   x  y  x  y  x  y x y  x  y
+                console.log("ini X");
+                console.log(x);
+                console.log("ini Y");
+                console.log(y);
+                // //berubah sumbu x
+                drawCollection[i].points[6] =   x;
+                //berubah sumbu y
+                drawCollection[i].points[3] = -x;
+                //berubah kedua sumbu
+                drawCollection[i].points[4] = x ;
+                drawCollection[i].points[5] = -x; 
+
+                // MENCOBA
+                // if(x < 0){
+                //         drawCollection[i].points[6] =  x;
+                //         //berubah sumbu y
+                //         drawCollection[i].points[3] = drawCollection[i].points[1];
+                //         //berubah kedua sumbu
+                //         drawCollection[i].points[4] = x ;
+                //         drawCollection[i].points[5] = drawCollection[i].points[3];                   
+                // }else{
+                //     drawCollection[i].points[6] =  x;
+                //     //berubah sumbu y
+                //     drawCollection[i].points[3] = -x;
+                //     //berubah kedua sumbu
+                //     drawCollection[i].points[4] = x ;
+                //     drawCollection[i].points[5] = -x;                   
+                // }
+                // for(var j = 0; j < drawCollection[i].points.length; j++){
+                //     if(j != 0 && j != 1 && drawCollection[i].points[j] <= 0){
+                //         // //berubah sumbu x
+                //         drawCollection[i].points[6] =  x;
+                //         //berubah sumbu y
+                //         drawCollection[i].points[3] = -x;
+                //         //berubah kedua sumbu
+                //         drawCollection[i].points[4] = x ;
+                //         drawCollection[i].points[5] = -x;                   
+                //     }else{
+                //         // //berubah sumbu x
+                //         drawCollection[i].points[6] =   x;
+                //         //berubah sumbu y
+                //         drawCollection[i].points[3] = -x;
+                //         //berubah kedua sumbu
+                //         drawCollection[i].points[4] = x ;
+                //         drawCollection[i].points[5] = -x;    
+                //     }
+                // }
+                
+
+            }        
+        }
+    }
     // jika drawing menggunakan pen poligon
     if (pen == 3) {
         if (isDrawing) {
@@ -155,12 +232,12 @@ function onCanvasMouseMove(e, canvas, gl) {
 }
 
 function onCanvasMouseUp(e, canvas, gl){
-    if (!isDrawing && pen != 2) {
+    if (!isDrawing && pen != 2 && pen != 1) {
         return;
     }
 
     for (var i = 0; i < drawCollection.length; i++) {
-        if (drawCollection[i].type == 2 && drawCollection[i].isDrawing == true) {
+        if (drawCollection[i].type == 2 || drawCollection[i].type == 1 && drawCollection[i].isDrawing == true) {
             drawCollection[i].isDrawing = false;
         }
     }
@@ -183,7 +260,7 @@ function render() {
             renderPoints(gl, drawCollection[i].points);
         }
         // if objek yang digambar adalah poligon
-        else if (drawCollection[i].type == 3 || drawCollection[i].type == 2) {
+        else if (drawCollection[i].type == 3 || drawCollection[i].type == 2 || drawCollection[i].type == 1) {
             // render poligon from points to triangles
             let success = renderPolygon(gl, drawCollection[i]);
             // jika sukses, gambar juga titik-titiknya
@@ -191,6 +268,7 @@ function render() {
                 renderPoints(gl, drawCollection[i].points);
             }
         }
+
     }
 
     // render drawing poligon selalu terakhir
@@ -234,15 +312,16 @@ function renderDrawingPoligon(gl, drawingPoligonBuffer) {
 function renderPolygon(gl, drawObject) {
     poligonPoints = drawObject.points;
     var colors = [];
-
-    // ubah poligon dalam bentuk ordered 1-d set of points menjadi array 1-d points dimana setiap 6 elemen merepresentasikan 3 vertex dari satu segitiga (x0, y0, x1, y1, x2, y2)
+    console.log("INI ADALAH POLYGON POINTS",poligonPoints);
+    // ubah poligon dalam bentuk ordered 1-d set of points menjadi array 1-d points dimana 
+    //setiap 6 elemen merepresentasikan 3 vertex dari satu segitiga (x0, y0, x1, y1, x2, y2)
     var polygonBuffer = poligonPointsToTriangles(poligonPoints);
-
     // push colors, implementasi nanti mungkin berubah
     for (var j = 0; j < polygonBuffer.length; j++) {
         colors.push(drawObject.color[0], drawObject.color[1], drawObject.color[2], drawObject.color[3]);
     }
 
+    console.log("INI ADALAH POLYGONBUFFER",polygonBuffer);
     // jika minimal ada 6 nilai a.k.a. tiga vertex
     if (polygonBuffer.length >= 6) {
         // gunakan shapes shader, shader titik dua dimensi tanpa matriks transformasi dan warna bisa diubah
@@ -356,6 +435,11 @@ function renderPoints(gl, pointBuffer) {
     gl.drawArrays(gl.POINTS, 0, Math.floor(pointBuffer.length/2));
 }
 
+
+
+
+// {Bagian Poligon}
+
 // fungsi poligon
 
 // fungsi untuk periksa jika poligon hasil triangulasi merupakan valid (tidak menjadi self-intersect)
@@ -467,12 +551,16 @@ function find_ear(arrayPoligon) {
 // fungsi triangulasi
 
 function poligonPointsToTriangles(poligonPoints) {
+    //Copy point from poligon point to temporary
     var poligonPointsCopy = [];
     for (var i = 0; i < poligonPoints.length; i++) {
         poligonPointsCopy.push(poligonPoints[i]);
     }
     var earPoligon = [];
     var poligonTriangles = [];
+    // console.log("INI POLIGON POINT COPY");
+    // console.log(poligonPointsCopy);
+
     while (poligonPointsCopy.length > 4) {
         earPoligon = [];
         var resArrays = find_ear(poligonPointsCopy);
