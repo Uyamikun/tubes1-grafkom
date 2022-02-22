@@ -85,7 +85,7 @@ function onCanvasMouseDown(e, canvas, gl) {
         if (arrayDrawingPoligon.length > 0) {
             // jika poligon ingin ditutup
             if (Math.abs(arrayDrawingPoligon[0]-x) <= distanceThreshold && Math.abs(arrayDrawingPoligon[1]-y) <= distanceThreshold) {
-                isDrawing = !isDrawing;
+                isDrawing = false;
                 new_point = false;
             }
         }
@@ -93,8 +93,15 @@ function onCanvasMouseDown(e, canvas, gl) {
         // jika menambah titik baru ke poligon yang ingin digambar
         if (new_point) {
             if (arrayDrawingPoligon.length == 0) {
+                // tambah titik anchor awal
                 arrayDrawingPoligon.push(x, y);
+            } else {
+                // update titik anchor
+                var i = arrayDrawingPoligon.length;
+                arrayDrawingPoligon[i-2] = x;
+                arrayDrawingPoligon[i-1] = y;
             }
+            // tambah titik baru
             arrayDrawingPoligon.push(x, y);
             // catatan: pemeriksaan jika poligon self-intersect dilakukan nanti
         }
@@ -102,7 +109,7 @@ function onCanvasMouseDown(e, canvas, gl) {
         else {
             // remove titik terakhir karena pasti tidak persis sama dengan titik awal
             arrayDrawingPoligon.splice(arrayDrawingPoligon.length-2, 2);
-
+            console.log("ARRAYDRAWINGPOLYGON", arrayDrawingPoligon);
             
             // pindahkan array drawing poligon ke draw collection sebagai poligon object
 
@@ -170,13 +177,32 @@ function onCanvasMouseMove(e, canvas, gl) {
                 console.log(x);
                 console.log("ini Y");
                 console.log(y);
+
+                // delta x, delta y
+                var dx = x-drawCollection[i].points[0];
+                var dy = y-drawCollection[i].points[1];
+
+                // update panjang sisi
+                // periksa lebih besar panjang x atau y
+                if (Math.abs(dx) > Math.abs(dy)) { // jika x lebih panjang
+                    // perubahan sumbu x sebesar dx
+                    var sx = dx;
+                    // perubahan sumbu y sebesar |dx| * sign(dy)
+                    var sy = Math.round(dy/Math.abs(dy))*Math.abs(dx);
+                } else {
+                    // perubahan sumbu y sebesar dy
+                    var sy = dy;
+                    // perubahan sumbu x sebesar |dy| * sign(dx)
+                    var sx = Math.round(dx/Math.abs(dx))*Math.abs(dy);
+                }
+
                 // //berubah sumbu x
-                drawCollection[i].points[6] =   x;
+                drawCollection[i].points[6] = drawCollection[i].points[0]+sx;
                 //berubah sumbu y
-                drawCollection[i].points[3] = -x;
+                drawCollection[i].points[3] = drawCollection[i].points[1]+sy;
                 //berubah kedua sumbu
-                drawCollection[i].points[4] = x ;
-                drawCollection[i].points[5] = -x; 
+                drawCollection[i].points[4] = drawCollection[i].points[0]+sx;
+                drawCollection[i].points[5] = drawCollection[i].points[1]+sy;
 
                 // MENCOBA
                 // if(x < 0){
@@ -363,6 +389,7 @@ function renderPolygon(gl, drawObject) {
         gl.vertexAttribPointer(colorLocation, size, type, normalize, stride, offset);
 
         // draw menggunakan triangles
+        console.log(Math.floor(polygonBuffer.length/2));
         gl.drawArrays(gl.TRIANGLES, 0, Math.floor(polygonBuffer.length/2));
         return true;
     } else {
