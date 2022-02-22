@@ -1,11 +1,34 @@
 var canvas, gl, shaderProgram;
-var drawCollection = []; //{type: int, points: [1,] array, color: [1,4] array, isDrawing: bool}
+var drawCollection = []; //{type: int, points: [1,] array, color: [1,4] array, isDrawing: bool, showOutlines: bool}
 var arrayDrawingPoligon = [];
 var isDrawing = false;
 var pen = 0;
 var distanceThreshold = 0.02;
 
+function convertHexToRGB(colorString) {
+    if (colorString.length == 7) {
+        if (colorString.substring(0, 1) == "#") {
+            var red = parseInt(colorString.substring(1, 3), 16);
+            var green = parseInt(colorString.substring(3, 5), 16);
+            var blue = parseInt(colorString.substring(5, 7), 16);
+            if (isNaN(red) || isNaN(green) || isNaN(blue)) {
+                return [0, 0, 0];
+            } else {
+                return [red/255, green/255, blue/255];
+            }
+        }
+    }
+
+    return [0, 0, 0];
+}
+
+function readColorPicker() {
+    colorstr = document.getElementById("color_picker").value;
+    return convertHexToRGB(colorstr);
+}
+
 window.onload = function() {
+    // initialize web gl rendering context
     canvas = initCanvas("canvas");
     gl = initGL(canvas);
 
@@ -22,10 +45,65 @@ window.onload = function() {
         onCanvasMouseUp(e, canvas, gl);
     }
 
-    document.getElementById("drawLine").onclick = function () {pen = 0;}
-    document.getElementById("drawRectangle").onclick = function () {pen = 2;}
-    document.getElementById("drawSquare").onclick = function () {pen = 1;}
-    document.getElementById("drawPolygon").onclick = function () {pen = 3;}
+    // initialize page
+    document.getElementById("color_picker").value = "#f0f0f0";
+    document.getElementById("canvas").style.cursor = "crosshair";
+
+    document.getElementById("drawLine").onclick = function () {
+        pen = 0;
+        document.getElementById("canvas").style.cursor = "crosshair";
+    }
+    document.getElementById("drawRectangle").onclick = function () {
+        pen = 2;
+        document.getElementById("canvas").style.cursor = "crosshair";
+    }
+    document.getElementById("drawSquare").onclick = function () {
+        pen = 1;
+        document.getElementById("canvas").style.cursor = "crosshair";
+    }
+    document.getElementById("drawPolygon").onclick = function () {
+        pen = 3;
+        document.getElementById("canvas").style.cursor = "crosshair";
+    }
+    document.getElementById("select").onclick = function () {
+        pen = 4;
+        document.getElementById("canvas").style.cursor = "default";
+    }
+    document.getElementById("movePoint").onclick = function () {
+        pen = 5;
+        document.getElementById("canvas").style.cursor = "move";
+    }
+    document.getElementById("color").onclick = function () {
+        pen = 6;
+        document.getElementById("canvas").style.cursor = "url('./assets/paint_bucket.cur'), auto";
+    }
+}
+
+function findDrawObjectPoint(x, y) {
+    for (var i = drawCollection.length-1; i >= 0; i--) {
+        for (var j = 0; j < drawCollection[i].length; j += 2) {
+            if (Math.abs(drawCollection[i][j]-x) <= distanceThreshold && Math.abs(drawCollection[i][j+1]-y) <= distanceThreshold) {
+                return i
+            }
+        }
+    }
+    return null
+}
+
+function findDrawObjectArea(x, y) {
+    for (var i = drawCollection.length-1; i >= 0; i--) {
+        var l = drawCollection[i].points.length;
+        var n_intersect = 0;
+        for (var j = 0; j < l; j += 2) {
+            if (checkIntersect(-2, y, x, y, drawCollection[i].points[(j+l)%l], drawCollection[i].points[(j+1+l)%l], drawCollection[i].points[(j+2+l)%l], drawCollection[i].points[(j+3+l)%l])) {
+                n_intersect += 1;
+            }
+        }
+        if (n_intersect%2 == 1) {
+            return i;
+        }
+    }
+    return null
 }
 
 function onCanvasMouseDown(e, canvas, gl) {
@@ -40,7 +118,7 @@ function onCanvasMouseDown(e, canvas, gl) {
 
         if (isDrawing) {
             // add new point, point 1 = anchor point, point 2 = moving point untuk ditangani onMouseMove()
-            drawCollection.push({type: 0, points: [x, y, x, y], color: null, isDrawing: true});
+            drawCollection.push({type: 0, points: [x, y, x, y], color: null, isDrawing: true, showOutlines: false});
         } else {
             // finalize moving point
             for (var i = 0; i < drawCollection.length; i++) {
@@ -57,19 +135,19 @@ function onCanvasMouseDown(e, canvas, gl) {
     if (pen == 2){
         isDrawing = true
 
-        drawCollection.push({type: 2, points: [x, y, x, y, x, y, x, y], color: [0.1, 0.1, 0.9, 1.0], isDrawing: true});
+        var selectedColor = readColorPicker()
+        drawCollection.push({type: 2, points: [x, y, x, y, x, y, x, y], color: [...selectedColor, 1.0], isDrawing: true, showOutlines: true});
     }
 
     if (pen == 1) {
-        var r1 = Math.random();
-        var b1 = Math.random();
-        var g1 = Math.random();
+        var selectedColor = readColorPicker()
         isDrawing = true;
         drawCollection.push({
             type: 1, 
             points: [x, y, x, y, x, y,x, y], 
-            color: [r1, b1, g1, 1.0], 
-            isDrawing: true}
+            color: [...selectedColor, 1.0], 
+            isDrawing: true,
+            showOutlines: true}
         );
     }
     // if pen = draw poligon
@@ -114,8 +192,18 @@ function onCanvasMouseDown(e, canvas, gl) {
 
             // untuk colors sementara doang, mager nyari cara generate bilangan random di javascript
             // nanti bisa pake global variable color yang di select dari menu tools
-            drawCollection.push({type: 3, points: arrayDrawingPoligon, color: [6/arrayDrawingPoligon.length, arrayDrawingPoligon.length/120, 1-6/arrayDrawingPoligon.length, 1.0], isDrawing: false});
+            var selectedColor = readColorPicker()
+            drawCollection.push({type: 3, points: arrayDrawingPoligon, color: [...selectedColor, 1.0], isDrawing: false, showOutlines: true});
             arrayDrawingPoligon = []
+        }
+    }
+
+    if (pen == 6) {
+        var i = findDrawObjectArea(x, y);
+        console.log(i);
+        if (i != null) {
+            var selectedColor = readColorPicker()
+            drawCollection[i].color = [...selectedColor, 1];
         }
     }
 
@@ -290,6 +378,9 @@ function render() {
             let success = renderPolygon(gl, drawCollection[i]);
             // jika sukses, gambar juga titik-titiknya
             if (success) {
+                if (drawCollection[i].showOutlines) {
+                    renderDrawingPoligon(gl, [...drawCollection[i].points, drawCollection[i].points[0], drawCollection[i].points[1]])
+                }
                 renderPoints(gl, drawCollection[i].points);
             }
         }
