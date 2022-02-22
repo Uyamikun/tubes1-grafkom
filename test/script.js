@@ -57,7 +57,6 @@ function onCanvasMouseDown(e, canvas, gl) {
     if (pen == 2){
         isDrawing = true
 
-
         drawCollection.push({type: 2, points: [x, y, x, y, x, y, x, y], color: [0.1, 0.1, 0.9, 1.0], isDrawing: true});
     }
 
@@ -258,7 +257,7 @@ function onCanvasMouseMove(e, canvas, gl) {
 }
 
 function onCanvasMouseUp(e, canvas, gl){
-    if (!isDrawing && pen != 2 && pen != 1) {
+    if (!isDrawing || (pen != 2 && pen != 1)) {
         return;
     }
 
@@ -267,7 +266,7 @@ function onCanvasMouseUp(e, canvas, gl){
             drawCollection[i].isDrawing = false;
         }
     }
-
+    console.log("hello");
     isDrawing = false;
 
     render()
@@ -587,6 +586,16 @@ function poligonPointsToTriangles(poligonPoints) {
     var poligonTriangles = [];
     // console.log("INI POLIGON POINT COPY");
     // console.log(poligonPointsCopy);
+
+    if (poligonPointsCopy.length == 8) {
+        var checkOddPairsIntersect = checkIntersect(poligonPointsCopy[0], poligonPointsCopy[1], poligonPointsCopy[2], poligonPointsCopy[3], poligonPointsCopy[4], poligonPointsCopy[5], poligonPointsCopy[6], poligonPointsCopy[7]);
+        var checkEvenPairsIntersect = checkIntersect(poligonPointsCopy[2], poligonPointsCopy[3], poligonPointsCopy[4], poligonPointsCopy[5], poligonPointsCopy[6], poligonPointsCopy[7], poligonPointsCopy[0], poligonPointsCopy[1]);
+        if (!checkOddPairsIntersect && !checkEvenPairsIntersect) {
+            poligonTriangles = [poligonPointsCopy[0], poligonPointsCopy[1], poligonPointsCopy[2], poligonPointsCopy[3], poligonPointsCopy[4], poligonPointsCopy[5], poligonPointsCopy[4], poligonPointsCopy[5], poligonPointsCopy[6], poligonPointsCopy[7], poligonPointsCopy[0], poligonPointsCopy[1]];
+            earPoligon = [poligonPointsCopy[4], poligonPointsCopy[5], poligonPointsCopy[6], poligonPointsCopy[7], poligonPointsCopy[0], poligonPointsCopy[1]];
+            poligonPointsCopy = [];
+        }
+    }
 
     while (poligonPointsCopy.length > 4) {
         earPoligon = [];
