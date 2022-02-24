@@ -212,14 +212,18 @@ function onCanvasMouseDown(e, canvas, gl) {
 
             if(drawCollection[i].type ==0){
                 if(j == 0){
+                    var temp0 = drawCollection[i].points[0]
+                    var temp1 = drawCollection[i].points[1]
                     drawCollection[i].points[0] = drawCollection[i].points[2]
                     drawCollection[i].points[1] = drawCollection[i].points[3]
-
+                    drawCollection[i].points[2] = temp0
+                    drawCollection[i].points[3] = temp1
                 }
                 drawCollection[i].isDrawing = true;
             }
           
         }
+
     }
     
 
@@ -315,17 +319,6 @@ function onCanvasMouseMove(e, canvas, gl) {
         }
     }
 
-    if(pen == 5){
-        for (var i = 0; i < drawCollection.length; i++) {
-            // cari garis mana yang sedang digambar
-            if (drawCollection[i].type == 0 && drawCollection[i].isDrawing == true) {
-                // update point 2 (moving point)
-                drawCollection[i].points[2] = x;
-                drawCollection[i].points[3] = y;
-            }
-        }
-    }
-    
     //jika drawing menggunakan rectangle
     if (pen == 2){
 
@@ -430,7 +423,16 @@ function onCanvasMouseMove(e, canvas, gl) {
         }
     }
     if (pen == 5){
+        for (var i = 0; i < drawCollection.length; i++) {
+            // cari garis mana yang sedang digambar
+            if (drawCollection[i].type == 0 && drawCollection[i].isDrawing == true) {
+                // update point 2 (moving point)
+                drawCollection[i].points[2] = x;
+                drawCollection[i].points[3] = y;
+            }
 
+        }
+        
     }
     if (pen == 7){
         for (var i = 0; i < drawCollection.length; i++) {
@@ -478,12 +480,12 @@ function onCanvasMouseMove(e, canvas, gl) {
 }
 
 function onCanvasMouseUp(e, canvas, gl){
-    if (!isDrawing || (pen != 2 && pen != 1 && pen != 7 && pen !=5)) {
+    if (!isDrawing || (pen != 2 && pen != 1 && pen != 7 && pen != 5)) {
         return;
     }
 
     for (var i = 0; i < drawCollection.length; i++) {
-        if (drawCollection[i].type == 2 || drawCollection[i].type == 1 && drawCollection[i].isDrawing == true) {
+        if (drawCollection[i].type == 2 || drawCollection[i].type == 1 || drawCollection[i].type == 0 &&  drawCollection[i].isDrawing == true) {
             drawCollection[i].isDrawing = false;
         }
     }
