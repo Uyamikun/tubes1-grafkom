@@ -77,13 +77,17 @@ window.onload = function() {
         pen = 6;
         document.getElementById("canvas").style.cursor = "url('./assets/paint_bucket.cur'), auto";
     }
+    document.getElementById("resize").onclick = function () {
+        pen = 7;
+        document.getElementById("canvas").style.cursor = "move";
+    }
 }
 
 function findDrawObjectPoint(x, y) {
     for (var i = drawCollection.length-1; i >= 0; i--) {
-        for (var j = 0; j < drawCollection[i].length; j += 2) {
-            if (Math.abs(drawCollection[i][j]-x) <= distanceThreshold && Math.abs(drawCollection[i][j+1]-y) <= distanceThreshold) {
-                return i
+        for (var j = 0; j < drawCollection[i].points.length; j += 2) {
+            if (Math.abs(drawCollection[i].points[j]-x) <= distanceThreshold && Math.abs(drawCollection[i].points[j+1]-y) <= distanceThreshold) {
+                return [i, j]
             }
         }
     }
@@ -204,6 +208,57 @@ function onCanvasMouseDown(e, canvas, gl) {
         if (i != null) {
             var selectedColor = readColorPicker()
             drawCollection[i].color = [...selectedColor, 1];
+        }
+    }
+
+    if (pen == 7){
+        var p = findDrawObjectPoint(x, y);
+        if (p != null){
+            var i = p[0]
+            var j = p[1]
+            isDrawing = true
+
+            console.log(drawCollection[i].points)
+            if (drawCollection[i].type == 1 || drawCollection[i].type == 2){
+                if (j != 4){
+                    var points = []
+                    if (j == 0){
+                        j = 4
+                        for (k=0;k<drawCollection[i].points.length;k++){
+                            points.push(drawCollection[i].points[(k+j) % 8])
+                            console.log(points)
+                        }
+                    }
+                    else{
+                        if (j == 2){
+                            points.push(drawCollection[i].points[6])
+                            points.push(drawCollection[i].points[7])
+                            points.push(drawCollection[i].points[4])
+                            points.push(drawCollection[i].points[5])
+                            points.push(drawCollection[i].points[2])
+                            points.push(drawCollection[i].points[3])
+                            points.push(drawCollection[i].points[0])
+                            points.push(drawCollection[i].points[1])
+                        }
+                        else{
+                            points.push(drawCollection[i].points[2])
+                            points.push(drawCollection[i].points[3])
+                            points.push(drawCollection[i].points[0])
+                            points.push(drawCollection[i].points[1])
+                            points.push(drawCollection[i].points[6])
+                            points.push(drawCollection[i].points[7])
+                            points.push(drawCollection[i].points[4])
+                            points.push(drawCollection[i].points[5])
+                        }
+                    }
+
+
+                    
+                    
+                    drawCollection[i].points = points
+                }
+                drawCollection[i].isDrawing = true
+            }
         }
     }
 
@@ -340,12 +395,53 @@ function onCanvasMouseMove(e, canvas, gl) {
             arrayDrawingPoligon[i-1] = y;
         }
     }
+
+    if (pen == 7){
+        for (var i = 0; i < drawCollection.length; i++) {
+            if (drawCollection[i].isDrawing == true) {
+                if (drawCollection[i].type == 2){
+                    drawCollection[i].points[3] = y;
+                    drawCollection[i].points[4] = x;
+                    drawCollection[i].points[5] = y;
+                    drawCollection[i].points[6] = x;
+                }
+                if (drawCollection[i].type == 1){
+                    // delta x, delta y
+                    var dx = x-drawCollection[i].points[0];
+                    var dy = y-drawCollection[i].points[1];
+
+                    // update panjang sisi
+                    // periksa lebih besar panjang x atau y
+                    if (Math.abs(dx) > Math.abs(dy)) { // jika x lebih panjang
+                        // perubahan sumbu x sebesar dx
+                        var sx = dx;
+                        // perubahan sumbu y sebesar |dx| * sign(dy)
+                        var sy = Math.round(dy/Math.abs(dy))*Math.abs(dx);
+                    } else {
+                        // perubahan sumbu y sebesar dy
+                        var sy = dy;
+                        // perubahan sumbu x sebesar |dy| * sign(dx)
+                        var sx = Math.round(dx/Math.abs(dx))*Math.abs(dy);
+                    }
+
+                    // //berubah sumbu x
+                    drawCollection[i].points[6] = drawCollection[i].points[0]+sx;
+                    //berubah sumbu y
+                    drawCollection[i].points[3] = drawCollection[i].points[1]+sy;
+                    //berubah kedua sumbu
+                    drawCollection[i].points[4] = drawCollection[i].points[0]+sx;
+                    drawCollection[i].points[5] = drawCollection[i].points[1]+sy;
+                }
+                
+            }
+        }
+    }
     
     render();
 }
 
 function onCanvasMouseUp(e, canvas, gl){
-    if (!isDrawing || (pen != 2 && pen != 1)) {
+    if (!isDrawing || (pen != 2 && pen != 1 && pen != 7)) {
         return;
     }
 
@@ -354,7 +450,6 @@ function onCanvasMouseUp(e, canvas, gl){
             drawCollection[i].isDrawing = false;
         }
     }
-    console.log("hello");
     isDrawing = false;
 
     render()
