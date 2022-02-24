@@ -202,6 +202,27 @@ function onCanvasMouseDown(e, canvas, gl) {
         }
     }
 
+    if(pen ==5){
+        var p = findDrawObjectPoint(x, y);
+        if(p != null){
+            console.log(p);
+            var i = p[0]
+            var j = p[1]
+            isDrawing= true;
+
+            if(drawCollection[i].type ==0){
+                if(j == 0){
+                    drawCollection[i].points[0] = drawCollection[i].points[2]
+                    drawCollection[i].points[1] = drawCollection[i].points[3]
+
+                }
+                drawCollection[i].isDrawing = true;
+            }
+          
+        }
+    }
+    
+
     if (pen == 6) {
         var i = findDrawObjectArea(x, y);
         console.log(i);
@@ -214,11 +235,13 @@ function onCanvasMouseDown(e, canvas, gl) {
     if (pen == 7){
         var p = findDrawObjectPoint(x, y);
         if (p != null){
+            console.log(p);
             var i = p[0]
             var j = p[1]
             isDrawing = true
 
-            console.log(drawCollection[i].points)
+            console.log(drawCollection[i])
+            console.log(j);
             if (drawCollection[i].type == 1 || drawCollection[i].type == 2){
                 if (j != 4){
                     var points = []
@@ -292,6 +315,17 @@ function onCanvasMouseMove(e, canvas, gl) {
         }
     }
 
+    if(pen == 5){
+        for (var i = 0; i < drawCollection.length; i++) {
+            // cari garis mana yang sedang digambar
+            if (drawCollection[i].type == 0 && drawCollection[i].isDrawing == true) {
+                // update point 2 (moving point)
+                drawCollection[i].points[2] = x;
+                drawCollection[i].points[3] = y;
+            }
+        }
+    }
+    
     //jika drawing menggunakan rectangle
     if (pen == 2){
 
@@ -395,7 +429,9 @@ function onCanvasMouseMove(e, canvas, gl) {
             arrayDrawingPoligon[i-1] = y;
         }
     }
+    if (pen == 5){
 
+    }
     if (pen == 7){
         for (var i = 0; i < drawCollection.length; i++) {
             if (drawCollection[i].isDrawing == true) {
@@ -437,11 +473,12 @@ function onCanvasMouseMove(e, canvas, gl) {
         }
     }
     
+    
     render();
 }
 
 function onCanvasMouseUp(e, canvas, gl){
-    if (!isDrawing || (pen != 2 && pen != 1 && pen != 7)) {
+    if (!isDrawing || (pen != 2 && pen != 1 && pen != 7 && pen !=5)) {
         return;
     }
 
@@ -523,7 +560,7 @@ function renderDrawingPoligon(gl, drawingPoligonBuffer) {
 function renderPolygon(gl, drawObject) {
     poligonPoints = drawObject.points;
     var colors = [];
-    console.log("INI ADALAH POLYGON POINTS",poligonPoints);
+    // console.log("INI ADALAH POLYGON POINTS",poligonPoints);
     // ubah poligon dalam bentuk ordered 1-d set of points menjadi array 1-d points dimana 
     //setiap 6 elemen merepresentasikan 3 vertex dari satu segitiga (x0, y0, x1, y1, x2, y2)
     var polygonBuffer = poligonPointsToTriangles(poligonPoints);
@@ -532,7 +569,7 @@ function renderPolygon(gl, drawObject) {
         colors.push(drawObject.color[0], drawObject.color[1], drawObject.color[2], drawObject.color[3]);
     }
 
-    console.log("INI ADALAH POLYGONBUFFER",polygonBuffer);
+    // console.log("INI ADALAH POLYGONBUFFER",polygonBuffer);
     // jika minimal ada 6 nilai a.k.a. tiga vertex
     if (polygonBuffer.length >= 6) {
         // gunakan shapes shader, shader titik dua dimensi tanpa matriks transformasi dan warna bisa diubah
