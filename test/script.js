@@ -4,7 +4,7 @@ var arrayDrawingPoligon = [];
 var isDrawing = false;
 var pen = 0;
 var distanceThreshold = 0.02;
-
+var index = [0,0]
 function convertHexToRGB(colorString) {
     if (colorString.length == 7) {
         if (colorString.substring(0, 1) == "#") {
@@ -36,10 +36,10 @@ window.onload = function() {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     canvas.onmousedown = function(e) {
-        onCanvasMouseDown(e, canvas, gl);
+        onCanvasMouseDown(e, canvas, gl,index);
     }
     canvas.onmousemove = function(e) {
-        onCanvasMouseMove(e, canvas, gl);
+        onCanvasMouseMove(e, canvas, gl,index);
     }
     canvas.onmouseup = function(e) {
         onCanvasMouseUp(e, canvas, gl);
@@ -110,7 +110,7 @@ function findDrawObjectArea(x, y) {
     return null
 }
 
-function onCanvasMouseDown(e, canvas, gl) {
+function onCanvasMouseDown(e, canvas, gl,index) {
     var x = e.pageX - gl.canvas.offsetLeft;
     var y = e.pageY - gl.canvas.offsetTop;
     x = (x - canvas.width / 2) / (canvas.width / 2);
@@ -190,7 +190,7 @@ function onCanvasMouseDown(e, canvas, gl) {
         else {
             // remove titik terakhir karena pasti tidak persis sama dengan titik awal
             arrayDrawingPoligon.splice(arrayDrawingPoligon.length-2, 2);
-            console.log("ARRAYDRAWINGPOLYGON", arrayDrawingPoligon);
+            // console.log("ARRAYDRAWINGPOLYGON", arrayDrawingPoligon);
             
             // pindahkan array drawing poligon ke draw collection sebagai poligon object
 
@@ -209,7 +209,6 @@ function onCanvasMouseDown(e, canvas, gl) {
             var i = p[0]
             var j = p[1]
             isDrawing= true;
-
             if(drawCollection[i].type ==0){
                 if(j == 0){
                     var temp0 = drawCollection[i].points[0]
@@ -219,9 +218,13 @@ function onCanvasMouseDown(e, canvas, gl) {
                     drawCollection[i].points[2] = temp0
                     drawCollection[i].points[3] = temp1
                 }
-                drawCollection[i].isDrawing = true;
             }
-          
+            if(drawCollection[i].type == 3){
+                index[0] =i
+                index[1] =j
+
+            }
+            drawCollection[i].isDrawing = true;
         }
 
     }
@@ -423,6 +426,9 @@ function onCanvasMouseMove(e, canvas, gl) {
         }
     }
     if (pen == 5){
+        console.log("ini index")
+        console.log(index)
+        
         for (var i = 0; i < drawCollection.length; i++) {
             // cari garis mana yang sedang digambar
             if (drawCollection[i].type == 0 && drawCollection[i].isDrawing == true) {
@@ -431,6 +437,13 @@ function onCanvasMouseMove(e, canvas, gl) {
                 drawCollection[i].points[3] = y;
             }
 
+            if(drawCollection[i].type == 3 && drawCollection[i].isDrawing == true ){
+
+                
+                drawCollection[i].points[index[1]] = x;
+                drawCollection[i].points[index[1]+1] = y;    
+
+            }
         }
         
     }
@@ -485,7 +498,7 @@ function onCanvasMouseUp(e, canvas, gl){
     }
 
     for (var i = 0; i < drawCollection.length; i++) {
-        if (drawCollection[i].type == 2 || drawCollection[i].type == 1 || drawCollection[i].type == 0 &&  drawCollection[i].isDrawing == true) {
+        if (drawCollection[i].type == 2 || drawCollection[i].type == 1 || drawCollection[i].type == 0 || drawCollection[i].type == 3 &&  drawCollection[i].isDrawing == true) {
             drawCollection[i].isDrawing = false;
         }
     }
