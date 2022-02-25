@@ -1,3 +1,4 @@
+
 var canvas, gl, shaderProgram;
 var drawCollection = []; //{type: int, points: [1,] array, color: [1,4] array, isDrawing: bool, showOutlines: bool}
 var arrayDrawingPoligon = [];
@@ -5,6 +6,7 @@ var isDrawing = false;
 var pen = 0;
 var distanceThreshold = 0.02;
 var index = [0,0]
+
 function convertHexToRGB(colorString) {
     if (colorString.length == 7) {
         if (colorString.substring(0, 1) == "#") {
@@ -21,6 +23,19 @@ function convertHexToRGB(colorString) {
 
     return [0, 0, 0];
 }
+
+function download(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+  
+    element.style.display = 'none';
+    document.body.appendChild(element);
+  
+    element.click();
+  
+    document.body.removeChild(element);
+  }
 
 function readColorPicker() {
     colorstr = document.getElementById("color_picker").value;
@@ -48,6 +63,22 @@ window.onload = function() {
     // initialize page
     document.getElementById("color_picker").value = "#f0f0f0";
     document.getElementById("canvas").style.cursor = "crosshair";
+
+    document.getElementById("save").onclick = function () {
+        let path = document.getElementById("path").value
+        download(path, JSON.stringify(drawCollection))
+    }
+
+    document.getElementById("load").addEventListener('change', function(){
+        var fr = new FileReader()
+
+        fr.onload = function(){
+            drawCollection = JSON.parse(fr.result)
+            render()
+        };
+        fr.readAsText(document.getElementById("load").files[0]);
+        
+    })
 
     document.getElementById("drawLine").onclick = function () {
         pen = 0;
