@@ -1,24 +1,89 @@
 body {
     margin: 0;
 }
-canvas {
-    display: block;
-border:1px solid #000000;
+
+#content {
+    margin: 15px 20px 15px 20px;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
-.column {
-    float: left;
-    padding: 10px;
-    box-sizing: border-box;
+canvas {
+    display: block;
 }
-  
-.row:after {
-    content: "";
-    display: table;
-    clear: both;
-    box-sizing: border-box;
+
+#canvas_container {
+    width: fit-content;
+    max-height: 600px;
+    overflow: hidden;
+    border:1px solid #000000;
 }
 
 .ui{
-    padding-top: 5px;
+    padding-bottom: 10px;
+}
+
+.help-overlay {
+    position: fixed;
+    display: none;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.8);
+    z-index: 2;
+    cursor: default;
+    align-items: center;
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+.accordion:hover .accordion-item:hover .accordion-item-content,
+.accordion .accordion-item--default .accordion-item-content {
+    height: 10em;
+}
+
+.accordion-item-content,
+.accordion:hover .accordion-item-content {
+    height: 0;
+    overflow: hidden;
+    transition: height 0.4s;
+}
+
+.accordion-item-content {
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 0;
+}
+
+.accordion {
+    margin: 0 auto;
+    width: 100%;
+}
+
+.accordion .accordion-item {
+  border-bottom: 1px solid #666;
+  padding: 1em;
+}
+
+.accordion h4 {
+  margin: 0;
+}
+
+.help-text {
+    margin: 0px;
+    padding-bottom: 20px;
+}
+
+.overlay-body {
+    width: 500px;
+    height: 560px;
+    border-radius: 7px;
+    padding: 25px 25px 40px 40px;
+    margin: auto;
+    background-color: #ffffff;
+}
+
+button, input[type=file] {
+    cursor: pointer;
 }

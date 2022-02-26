@@ -10,10 +10,7 @@ function initCanvas(canvasID) {
 }
  
 function initGL(canvas) {
-    var names = [
-        "webgl", "experimental-webgl",
-        "webkit-3d", "moz-webgl"
-    ];
+    var names = ["webgl", "experimental-webgl"];
  
     for(var i = 0; i < names.length; ++i) {
         try {
@@ -267,4 +264,16 @@ function createShapesShaderProgram(gl) {
         return null;
     }
     return program;
+}
+
+function resizeCanvasToDisplaySize(canvas, multiplier) {
+    multiplier = multiplier || 1;
+    const width = canvas.clientWidth * multiplier | 0;
+    const height = canvas.clientWidth * multiplier | 0;
+    if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        return true;
+    }
+    return false;
 }

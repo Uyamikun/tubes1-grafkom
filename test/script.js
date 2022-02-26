@@ -1,6 +1,9 @@
 
 var canvas, gl, shaderProgram;
 var drawCollection = []; //{type: int, points: [1,] array, color: [1,4] array, isDrawing: bool, showOutlines: bool}
+var drawCollectionBuffer = [];
+var redoBuffer = [];
+var redoDrawingPoligon = [];
 var arrayDrawingPoligon = [];
 var isDrawing = false;
 var pen = 0;
@@ -80,6 +83,35 @@ window.onload = function() {
         
     })
 
+    document.getElementById("undo").onclick = function () {
+        if (arrayDrawingPoligon.length > 4) {
+            redoDrawingPoligon = arrayDrawingPoligon;
+            var i = arrayDrawingPoligon.length;
+            arrayDrawingPoligon.splice(i-4, 2);
+            render();
+        } else if (arrayDrawingPoligon.length == 4) {
+            redoDrawingPoligon = arrayDrawingPoligon;
+            arrayDrawingPoligon = [];
+            isDrawing = false;
+            render();
+        } else if (drawCollectionBuffer.length != 0) {
+            redoBuffer.push(drawCollection);
+            drawCollection = drawCollectionBuffer.pop();
+            render();
+        }
+    }
+    document.getElementById("redo").onclick = function () {
+        if (redoDrawingPoligon.length != 0) {
+            arrayDrawingPoligon = redoDrawingPoligon;
+            redoDrawingPoligon = [];
+            isDrawing = true;
+            render();
+        } else if (redoBuffer.length != 0) {
+            drawCollectionBuffer.push(JSON.parse(JSON.stringify(drawCollection)));
+            drawCollection = redoBuffer.pop();
+            render();
+        }
+    }
     document.getElementById("drawLine").onclick = function () {
         pen = 0;
         document.getElementById("canvas").style.cursor = "crosshair";
@@ -95,10 +127,6 @@ window.onload = function() {
     document.getElementById("drawPolygon").onclick = function () {
         pen = 3;
         document.getElementById("canvas").style.cursor = "crosshair";
-    }
-    document.getElementById("select").onclick = function () {
-        pen = 4;
-        document.getElementById("canvas").style.cursor = "default";
     }
     document.getElementById("movePoint").onclick = function () {
         pen = 5;
@@ -153,6 +181,8 @@ function onCanvasMouseDown(e, canvas, gl,index) {
 
         if (isDrawing) {
             // add new point, point 1 = anchor point, point 2 = moving point untuk ditangani onMouseMove()
+            drawCollectionBuffer.push(JSON.parse(JSON.stringify(drawCollection)));
+            redoBuffer = []
             drawCollection.push({type: 0, points: [x, y, x, y], color: null, isDrawing: true, showOutlines: false});
         } else {
             // finalize moving point
@@ -168,6 +198,11 @@ function onCanvasMouseDown(e, canvas, gl,index) {
 
     // if pen = draw rectangle
     if (pen == 2){
+        if (!isDrawing) {
+            drawCollectionBuffer.push(JSON.parse(JSON.stringify(drawCollection)));
+            redoBuffer = []
+        }
+
         isDrawing = true
 
         var selectedColor = readColorPicker()
@@ -175,6 +210,11 @@ function onCanvasMouseDown(e, canvas, gl,index) {
     }
 
     if (pen == 1) {
+        if (!isDrawing) {
+            drawCollectionBuffer.push(JSON.parse(JSON.stringify(drawCollection)));
+            redoBuffer = []
+        }
+
         var selectedColor = readColorPicker()
         isDrawing = true;
         drawCollection.push({
@@ -219,27 +259,29 @@ function onCanvasMouseDown(e, canvas, gl,index) {
         }
         // jika menutup poligon
         else {
+            drawCollectionBuffer.push(JSON.parse(JSON.stringify(drawCollection)));
+            redoBuffer = []
             // remove titik terakhir karena pasti tidak persis sama dengan titik awal
             arrayDrawingPoligon.splice(arrayDrawingPoligon.length-2, 2);
-            // console.log("ARRAYDRAWINGPOLYGON", arrayDrawingPoligon);
-            
-            // pindahkan array drawing poligon ke draw collection sebagai poligon object
 
-            // untuk colors sementara doang, mager nyari cara generate bilangan random di javascript
-            // nanti bisa pake global variable color yang di select dari menu tools
+            // pindahkan array drawing poligon ke draw collection sebagai poligon object
             var selectedColor = readColorPicker()
             drawCollection.push({type: 3, points: arrayDrawingPoligon, color: [...selectedColor, 1.0], isDrawing: false, showOutlines: true});
             arrayDrawingPoligon = []
         }
     }
 
-    if(pen ==5){
+    if(pen == 5){
         var p = findDrawObjectPoint(x, y);
         if(p != null){
+            if (!isDrawing) {
+                drawCollectionBuffer.push(JSON.parse(JSON.stringify(drawCollection)));
+                redoBuffer = []
+            }
             console.log(p);
             var i = p[0]
             var j = p[1]
-            isDrawing= true;
+            isDrawing = true;
             if(drawCollection[i].type ==0){
                 if(j == 0){
                     var temp0 = drawCollection[i].points[0]
@@ -265,6 +307,9 @@ function onCanvasMouseDown(e, canvas, gl,index) {
         var i = findDrawObjectArea(x, y);
         console.log(i);
         if (i != null) {
+            drawCollectionBuffer.push(JSON.parse(JSON.stringify(drawCollection)));
+            redoBuffer = []
+
             var selectedColor = readColorPicker()
             drawCollection[i].color = [...selectedColor, 1];
         }
@@ -273,6 +318,10 @@ function onCanvasMouseDown(e, canvas, gl,index) {
     if (pen == 7){
         var p = findDrawObjectPoint(x, y);
         if (p != null){
+            if (!isDrawing) {
+                drawCollectionBuffer.push(JSON.parse(JSON.stringify(drawCollection)));
+                redoBuffer = []
+            }
             console.log(p);
             var i = p[0]
             var j = p[1]
@@ -313,9 +362,6 @@ function onCanvasMouseDown(e, canvas, gl,index) {
                         }
                     }
 
-
-                    
-                    
                     drawCollection[i].points = points
                 }
                 drawCollection[i].isDrawing = true
@@ -406,44 +452,6 @@ function onCanvasMouseMove(e, canvas, gl) {
                 //berubah kedua sumbu
                 drawCollection[i].points[4] = drawCollection[i].points[0]+sx;
                 drawCollection[i].points[5] = drawCollection[i].points[1]+sy;
-
-                // MENCOBA
-                // if(x < 0){
-                //         drawCollection[i].points[6] =  x;
-                //         //berubah sumbu y
-                //         drawCollection[i].points[3] = drawCollection[i].points[1];
-                //         //berubah kedua sumbu
-                //         drawCollection[i].points[4] = x ;
-                //         drawCollection[i].points[5] = drawCollection[i].points[3];                   
-                // }else{
-                //     drawCollection[i].points[6] =  x;
-                //     //berubah sumbu y
-                //     drawCollection[i].points[3] = -x;
-                //     //berubah kedua sumbu
-                //     drawCollection[i].points[4] = x ;
-                //     drawCollection[i].points[5] = -x;                   
-                // }
-                // for(var j = 0; j < drawCollection[i].points.length; j++){
-                //     if(j != 0 && j != 1 && drawCollection[i].points[j] <= 0){
-                //         // //berubah sumbu x
-                //         drawCollection[i].points[6] =  x;
-                //         //berubah sumbu y
-                //         drawCollection[i].points[3] = -x;
-                //         //berubah kedua sumbu
-                //         drawCollection[i].points[4] = x ;
-                //         drawCollection[i].points[5] = -x;                   
-                //     }else{
-                //         // //berubah sumbu x
-                //         drawCollection[i].points[6] =   x;
-                //         //berubah sumbu y
-                //         drawCollection[i].points[3] = -x;
-                //         //berubah kedua sumbu
-                //         drawCollection[i].points[4] = x ;
-                //         drawCollection[i].points[5] = -x;    
-                //     }
-                // }
-                
-
             }        
         }
     }
@@ -469,14 +477,11 @@ function onCanvasMouseMove(e, canvas, gl) {
             }
 
             if(drawCollection[i].type == 3 && drawCollection[i].isDrawing == true ){
-
-                
                 drawCollection[i].points[index[1]] = x;
                 drawCollection[i].points[index[1]+1] = y;    
 
             }
         }
-        
     }
     if (pen == 7){
         for (var i = 0; i < drawCollection.length; i++) {
@@ -514,11 +519,9 @@ function onCanvasMouseMove(e, canvas, gl) {
                     drawCollection[i].points[4] = drawCollection[i].points[0]+sx;
                     drawCollection[i].points[5] = drawCollection[i].points[1]+sy;
                 }
-                
             }
         }
     }
-    
     
     render();
 }
@@ -541,6 +544,11 @@ function onCanvasMouseUp(e, canvas, gl){
 // fungsi render
 
 function render() {
+    // standard web gl shader setup
+    resizeCanvasToDisplaySize(gl.canvas);
+        
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     for (var i = 0; i < drawCollection.length; i++) {
@@ -575,9 +583,6 @@ function renderDrawingPoligon(gl, drawingPoligonBuffer) {
         // gunakan line shader, warna tidak bisa dipilih
         var linesShaderProgram = createLinesShaderProgram(gl);
         gl.useProgram(linesShaderProgram);
-        
-        // standard web gl shader setup
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
         var positionLocation = gl.getAttribLocation(linesShaderProgram, "a_position");
 
@@ -634,8 +639,6 @@ function renderPolygon(gl, drawObject) {
         gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
         gl.enableVertexAttribArray(positionLocation);
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
@@ -671,9 +674,6 @@ function renderLine(gl, lineBuffer) {
         // gunakan line shader, warna tidak bisa dipilih
         var linesShaderProgram = createLinesShaderProgram(gl);
         gl.useProgram(linesShaderProgram);
-        
-        // standard web gl shader setup
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
         var positionLocation = gl.getAttribLocation(linesShaderProgram, "a_position");
 
@@ -706,8 +706,6 @@ function renderPoints(gl, pointBuffer) {
     // draw n points
     var pointsShaderProgram = createPointsShaderProgram(gl);
     gl.useProgram(pointsShaderProgram);
-    
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
     // standard web gl shader setup
     var positionLocation = gl.getAttribLocation(pointsShaderProgram, "a_position");
@@ -885,4 +883,14 @@ function poligonPointsToTriangles(poligonPoints) {
     }
 
     return poligonTriangles;
+}
+
+// help
+
+function showHelp() {
+    document.getElementById("help_overlay").style.display = "flex";
+}
+
+function closeHelp() {
+    document.getElementById("help_overlay").style.display = "none";
 }

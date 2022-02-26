@@ -20,30 +20,84 @@
         <script type="text/javascript" src="script.js"></script>
     </head>
     <body>
-        <div id="ui">
-            <button id="select">Select</button>
-            <button id="drawLine">Garis</button>
-            <button id="drawSquare">Persegi</button>
-            <button id="drawRectangle">Persegi panjang</button>
-            <button id="drawPolygon">Poligon</button>
-            <button id="movePoint">Move</button>
-            <button id="color">Color</button>
-            <button id="resize">Resize</button>
-            <input type="color" id="color_picker" name="colorpicker" value="#f0f0f0">
+        <div id="content">
+            <div class="ui">
+                <button class="tool-button" id="undo">Undo</button>
+                <button class="tool-button" id="redo">Redo</button>
+                <button class="tool-button" id="drawLine">Garis</button>
+                <button class="tool-button" id="drawSquare">Persegi</button>
+                <button class="tool-button" id="drawRectangle">Persegi panjang</button>
+                <button class="tool-button" id="drawPolygon">Poligon</button>
+                <button class="tool-button" id="movePoint">Move</button>
+                <button class="tool-button" id="resize">Resize</button>
+                <button class="tool-button" id="color">Color</button>
+                <input type="color" id="color_picker" name="colorpicker" value="#f0f0f0">
+                <button class="tool-button" id="help" onclick="showHelp()">Help</button>
+            </div>
+            <div class="ui">
+                <label for="path">File Name: </label>
+                <input id="path" type="text">
+                <button class="save-button" id="save">Save</button>
+            </div>
+            <div class="ui">
+                <label for="load">Load: </label>
+                <input class="load-button" type="file" id="load">
+            </div>
+            <div id="canvas_container">
+                <canvas id="canvas" width="1200" height="1200">
+                    Canvas Not Supported! :(
+                </canvas>
+            </div>
         </div>
-        <div class="ui">
-            <label for="path">File Name: </label>
-            <input id="path" type="text">
-            <button id="save">Save</button>
-        </div>
-        <div class="ui">
-            <label for="load">Load: </label>
-            <input type="file" id="load">
-        </div>
-        <div id="canvas_container" class="column">
-            <canvas id="canvas" width="800" height="800">
-                Canvas Not Supported! :(
-            </canvas>
+        <div id="help_overlay" class="help-overlay" onclick="closeHelp()">
+            <div class="overlay-body">
+                <p class="overlay-close-button" onclick="closeHelp()">&#x2715;</p>
+                <h3 class="help-text">Cara Penggunaan</h3>
+                <div class="accordion">
+                    <section class="accordion-item">
+                        <h4>Menggambar garis</h4>
+                        <div class="accordion-item-content">
+                          <p>Pertama, tekan tombol "Garis" pada toolbar. Lalu klik di titik awal garis dan pindahkan kursor ke titik tujuan. Tekan mouse sekali lagi untuk memfinalisasi letak titik akhir garis.</p>
+                        </div>
+                    </section>
+                    <section  class="accordion-item">
+                        <h4>Menggambar persegi/persegi panjang</h4>
+                        <div class="accordion-item-content">
+                          <p>Pertama, tekan tombol "Persegi" atau "Persegi panjang" pada toolbar. Kemudian, tekan dan tahan mouse di lokasi satu sudut segiempat dan tarik kursor ke sudut berlawanan. Lepas mouse untuk memfinalisasi letak sudut berlawanan.</p>
+                        </div>
+                    </section>
+                    <section class="accordion-item">
+                        <h4>Menggambar poligon</h4>
+                        <div class="accordion-item-content">
+                          <p>Pertama, tekan tombol "Poligon" pada toolbar. Kemudian, klik mouse di titik awal poligon dan pindahkan kursor ke titik berikutnya. Tekan mouse untuk memfinalisasi letak titik berikutnya. Proses diulang berulang kali hingga poligon ditutup dengan cara mengklik titik awal. Poligon tidak boleh menyilang dirinya karena batasan algoritma triangulasi.</p>
+                        </div>
+                    </section>
+                    <section class="accordion-item">
+                        <h4>Memindahkan titik/simpul garis atau poligon</h4>
+                        <div class="accordion-item-content">
+                          <p>Pertama, tekan tombol "Move" pada toolbar. Kemudian, tekan dan tahan mouse pada letak simpul garis atau poligon yang ingin dipindahkan pada layar dan tarik kursor ke letak titik baru. Lepas mouse untuk memfinalisasi letak titik baru.</p>
+                        </div>
+                    </section>
+                    <section class="accordion-item">
+                        <h4>Mengubah panjang sisi persegi/persegi panjang</h4>
+                        <div class="accordion-item-content">
+                          <p>Pertama, tekan tombol "Resize" pada toolbar. Kemudian, tekan dan tahan mouse pada letak sudut persegi/persegi panjang yang ingin diubah ukurannya dan tarik kursor ke letak titik baru. Lepas mouse untuk memfinalisasi ukuran persegi/persegi panjang.</p>
+                        </div>
+                    </section>
+                    <section class="accordion-item">
+                        <h4>Mengubah warna objek</h4>
+                        <div class="accordion-item-content">
+                          <p>Objek yang bisa diubah warnanya merupakan area persegi, persegi panjang, dan poligon. Pertama, tekan input warna sebelah tombol "Color" pada toolbar dan pilih warna yang diinginkan. Kemudian, tekan tombol "Color" pada toolbar dan klik objek yang ingin diwarnai ulang. Selebihnya, warna default objek baru yang digambar merupakan warna yang terpilih pada input warna.</p>
+                        </div>
+                    </section>
+                    <section class="accordion-item">
+                        <h4>Save/load model</h4>
+                        <div class="accordion-item-content">
+                          <p>Untuk menyimpan model, isi nama file pada kolom "File Name" pada toolbar kemudian tekan "Save". Untuk me-load model yang sudah disimpan, tekan tombol "Browse" dan pilih file model yang ingin dibaca. Data dibaca sebagai teks berformat JSON.</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
         </div>
     </body>
 </html>
