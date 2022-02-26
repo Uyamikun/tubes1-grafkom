@@ -157,9 +157,20 @@ function findDrawObjectArea(x, y) {
     for (var i = drawCollection.length-1; i >= 0; i--) {
         var l = drawCollection[i].points.length;
         var n_intersect = 0;
-        for (var j = 0; j < l; j += 2) {
-            if (checkIntersect(-2, y, x, y, drawCollection[i].points[(j+l)%l], drawCollection[i].points[(j+1+l)%l], drawCollection[i].points[(j+2+l)%l], drawCollection[i].points[(j+3+l)%l])) {
-                n_intersect += 1;
+        if (drawCollection[i].type == 1 || drawCollection[i].type == 2) {
+            var xmin = Math.min(drawCollection[i].points[0], drawCollection[i].points[4])
+            var xmax = Math.max(drawCollection[i].points[0], drawCollection[i].points[4])
+            var ymin = Math.min(drawCollection[i].points[1], drawCollection[i].points[5])
+            var ymax = Math.max(drawCollection[i].points[1], drawCollection[i].points[5])
+            if (x >= xmin && x <= xmax && y >= ymin && y <= ymax) {
+                return i;
+            }
+        }
+        if (drawCollection[i].type == 3) {
+            for (var j = 0; j < l; j += 2) {
+                if (checkIntersect(-2, y, x, y, drawCollection[i].points[(j+l)%l], drawCollection[i].points[(j+1+l)%l], drawCollection[i].points[(j+2+l)%l], drawCollection[i].points[(j+3+l)%l])) {
+                    n_intersect += 1;
+                }
             }
         }
         if (n_intersect%2 == 1) {
@@ -278,7 +289,6 @@ function onCanvasMouseDown(e, canvas, gl,index) {
                 drawCollectionBuffer.push(JSON.parse(JSON.stringify(drawCollection)));
                 redoBuffer = []
             }
-            console.log(p);
             var i = p[0]
             var j = p[1]
             isDrawing = true;
@@ -305,7 +315,6 @@ function onCanvasMouseDown(e, canvas, gl,index) {
 
     if (pen == 6) {
         var i = findDrawObjectArea(x, y);
-        console.log(i);
         if (i != null) {
             drawCollectionBuffer.push(JSON.parse(JSON.stringify(drawCollection)));
             redoBuffer = []
@@ -322,13 +331,10 @@ function onCanvasMouseDown(e, canvas, gl,index) {
                 drawCollectionBuffer.push(JSON.parse(JSON.stringify(drawCollection)));
                 redoBuffer = []
             }
-            console.log(p);
             var i = p[0]
             var j = p[1]
             isDrawing = true
 
-            console.log(drawCollection[i])
-            console.log(j);
             if (drawCollection[i].type == 1 || drawCollection[i].type == 2){
                 if (j != 4){
                     var points = []
@@ -336,7 +342,6 @@ function onCanvasMouseDown(e, canvas, gl,index) {
                         j = 4
                         for (k=0;k<drawCollection[i].points.length;k++){
                             points.push(drawCollection[i].points[(k+j) % 8])
-                            console.log(points)
                         }
                     }
                     else{
@@ -422,10 +427,6 @@ function onCanvasMouseMove(e, canvas, gl) {
             if (drawCollection[i].type == 1 && drawCollection[i].isDrawing == true) {
                 //0  1   2  3  4  5  6  7 8 9 10 11
                 //x  y   x  y  x  y  x  y x y  x  y
-                console.log("ini X");
-                console.log(x);
-                console.log("ini Y");
-                console.log(y);
 
                 // delta x, delta y
                 var dx = x-drawCollection[i].points[0];
@@ -465,9 +466,6 @@ function onCanvasMouseMove(e, canvas, gl) {
         }
     }
     if (pen == 5){
-        console.log("ini index")
-        console.log(index)
-        
         for (var i = 0; i < drawCollection.length; i++) {
             // cari garis mana yang sedang digambar
             if (drawCollection[i].type == 0 && drawCollection[i].isDrawing == true) {
@@ -611,7 +609,6 @@ function renderDrawingPoligon(gl, drawingPoligonBuffer) {
 function renderPolygon(gl, drawObject) {
     poligonPoints = drawObject.points;
     var colors = [];
-    // console.log("INI ADALAH POLYGON POINTS",poligonPoints);
     // ubah poligon dalam bentuk ordered 1-d set of points menjadi array 1-d points dimana 
     //setiap 6 elemen merepresentasikan 3 vertex dari satu segitiga (x0, y0, x1, y1, x2, y2)
     var polygonBuffer = poligonPointsToTriangles(poligonPoints);
@@ -619,8 +616,7 @@ function renderPolygon(gl, drawObject) {
     for (var j = 0; j < polygonBuffer.length; j++) {
         colors.push(drawObject.color[0], drawObject.color[1], drawObject.color[2], drawObject.color[3]);
     }
-
-    // console.log("INI ADALAH POLYGONBUFFER",polygonBuffer);
+    
     // jika minimal ada 6 nilai a.k.a. tiga vertex
     if (polygonBuffer.length >= 6) {
         // gunakan shapes shader, shader titik dua dimensi tanpa matriks transformasi dan warna bisa diubah
@@ -660,10 +656,12 @@ function renderPolygon(gl, drawObject) {
         gl.vertexAttribPointer(colorLocation, size, type, normalize, stride, offset);
 
         // draw menggunakan triangles
-        console.log(Math.floor(polygonBuffer.length/2));
         gl.drawArrays(gl.TRIANGLES, 0, Math.floor(polygonBuffer.length/2));
         return true;
     } else {
+        drawObject.type = null;
+        drawObject.points = [];
+        drawObject.color = [];
         return false;
     }
 }
@@ -851,8 +849,6 @@ function poligonPointsToTriangles(poligonPoints) {
     }
     var earPoligon = [];
     var poligonTriangles = [];
-    // console.log("INI POLIGON POINT COPY");
-    // console.log(poligonPointsCopy);
 
     if (poligonPointsCopy.length == 8) {
         var checkOddPairsIntersect = checkIntersect(poligonPointsCopy[0], poligonPointsCopy[1], poligonPointsCopy[2], poligonPointsCopy[3], poligonPointsCopy[4], poligonPointsCopy[5], poligonPointsCopy[6], poligonPointsCopy[7]);
