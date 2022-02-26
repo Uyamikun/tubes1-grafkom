@@ -84,6 +84,14 @@ canvas {
     background-color: #ffffff;
 }
 
-button, input[type=file] {
+.tool-button, input[type=file] {
+    cursor: pointer;
+}
+
+.overlay-close-button {
+    text-align: right;
+    font-size: 20px;
+    margin: 0;
+    color: #282936;
     cursor: pointer;
 }
