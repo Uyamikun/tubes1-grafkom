@@ -21,30 +21,32 @@
     </head>
     <body>
         <div id="content">
-            <div class="ui">
-                <button class="tool-button" id="undo">Undo</button>
-                <button class="tool-button" id="redo">Redo</button>
-                <button class="tool-button" id="drawLine">Garis</button>
-                <button class="tool-button" id="drawSquare">Persegi</button>
-                <button class="tool-button" id="drawRectangle">Persegi panjang</button>
-                <button class="tool-button" id="drawPolygon">Poligon</button>
-                <button class="tool-button" id="movePoint">Move</button>
-                <button class="tool-button" id="resize">Resize</button>
-                <button class="tool-button" id="color">Color</button>
-                <input type="color" id="color_picker" name="colorpicker" value="#f0f0f0">
-                <button class="tool-button" id="help" onclick="showHelp()">Help</button>
-            </div>
-            <div class="ui">
-                <label for="path">File Name: </label>
-                <input id="path" type="text">
-                <button class="tool-button" id="save">Save</button>
-            </div>
-            <div class="ui">
-                <label for="load">Load: </label>
-                <input type="file" id="load">
+            <div>
+                <div class="ui">
+                    <button class="tool-button" id="undo">Undo</button>
+                    <button class="tool-button" id="redo">Redo</button>
+                    <button class="tool-button" id="drawLine">Garis</button>
+                    <button class="tool-button" id="drawSquare">Persegi</button>
+                    <button class="tool-button" id="drawRectangle">Persegi panjang</button>
+                    <button class="tool-button" id="drawPolygon">Poligon</button>
+                    <button class="tool-button" id="movePoint">Move</button>
+                    <button class="tool-button" id="resize">Resize</button>
+                    <button class="tool-button" id="color">Color</button>
+                    <input type="color" id="color_picker" name="colorpicker" value="#f0f0f0">
+                    <button class="tool-button" id="help" onclick="showHelp()">Help</button>
+                </div>
+                <div class="ui">
+                    <label for="path">File Name: </label>
+                    <input id="path" type="text">
+                    <button class="tool-button" id="save">Save</button>
+                </div>
+                <div class="ui">
+                    <label for="load">Load: </label>
+                    <input type="file" id="load">
+                </div>
             </div>
             <div id="canvas_container">
-                <canvas id="canvas" width="1200" height="1200">
+                <canvas id="canvas" width="1500" height="1500">
                     Canvas Not Supported! :(
                 </canvas>
             </div>
